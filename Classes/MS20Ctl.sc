@@ -7,21 +7,52 @@
 
 MS20Ctl : MS20PatchBay {
     var ctls;
+
     *new {
         ^super.new.initMS20Ctl;
     }
 
     initMS20Ctl {
+        var knobs;
+
         MIDIClient.init;
         MIDIIn.connectAll;
         // MIDIIn.findPort("MS-20 Controller", "IN");
 
         ctls = ();
-        // ctls.patch = MS20PatchBay();
+        knobs = ();
+
+        knobs['vcf-highpass'] = 28;
+        knobs['vcf-lowpass'] = 74;
+
+        this.assignCtls(knobs);
     }
 
-    doesNotUnderstand {|selector ... args|
-        ^ctls[selector] ?? { ^super.doesNotUnderstand(selector, args) }
+    assignCtls {|knobs|
+        knobs.keysValuesDo {|key, cc|
+            var ctl = MS20Knob(key, cc);
+            ctls.put(key, ctl);
+        };
+    }
+
+    onChange {|param, func|
+        ctls[param].onChange_(func);
+    }
+}
+
+MS20Knob {
+    var key, cc;
+
+    *new {|key, cc|
+        ^super.newCopyArgs(("ms20_" ++ key).asSymbol, cc);
+    }
+
+    onChange_ {|func|
+        MIDIdef.cc(key, func, cc);
+    }
+
+    free {
+        MIDIdef.cc(key).free;
     }
 }
 
@@ -29,7 +60,7 @@ MS20PatchBay {
     var actions, inputs;
     var lastConnection;
 
-    *new {|key|
+    *new {
         ^super.new.initPatchBay;
     }
 
