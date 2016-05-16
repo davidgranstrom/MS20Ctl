@@ -128,18 +128,17 @@ MS20PatchBay {
         switch (event)
         { 4 } {
             if(from == to) { // just one connection
-                // execute connect callback
                 actions[\connect][from].value;
             } {
-                // execute connect callback
+                // patch callback
                 actions[\patchConnect][from][to].value;
             }
         }
         { 5 } {
-            if(from == to) {
+            if(from == to) { // just one connection
                 actions[\disconnect][from].value;
             } {
-                // execute connect callback
+                // patch callback
                 actions[\patchDisconnect][from][to].value;
             }
         };
