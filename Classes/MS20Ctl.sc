@@ -5,20 +5,19 @@
 // Copyright (c) : David Granström 2016
 // ===========================================================================
 
-MS20Ctl {
+MS20Ctl : MS20PatchBay {
     var ctls;
-
     *new {
-        ^super.new.init;
+        ^super.new.initMS20Ctl;
     }
 
-    init {
+    initMS20Ctl {
         MIDIClient.init;
         MIDIIn.connectAll;
         // MIDIIn.findPort("MS-20 Controller", "IN");
 
         ctls = ();
-        ctls.patch = MS20PatchBay();
+        // ctls.patch = MS20PatchBay();
     }
 
     doesNotUnderstand {|selector ... args|
@@ -27,7 +26,7 @@ MS20Ctl {
 }
 
 MS20PatchBay {
-    var actions, ctls;
+    var actions, inputs;
     var lastConnection;
 
     *new {|key|
@@ -37,17 +36,20 @@ MS20PatchBay {
     initPatchBay {
         var packetList = Array.new(3);
 
-        ctls = (
+        // patch bay inputs
+        inputs = (
             0: \total,
             19: \pink,
             23: \white,
             29: \signalOut
         );
 
+        // storage for connect/disconnect callbacks
         actions = ();
         actions[\connect] = ();
         actions[\disconnect] = ();
-        actions[\patch] = ();
+        actions[\patchConnect] = ();
+        actions[\patchDisconnect] = ();
 
         MIDIdef.cc(\io, {|msg|
             packetList = packetList.add(msg);
@@ -56,7 +58,7 @@ MS20PatchBay {
                 this.parse(packetList);
                 packetList = Array.new(3);
             }
-        }, [ 99, 98, 6 ]); // event, param, echo
+        }, [ 99, 98, 6 ]); // event, addr1, addr2
     }
 
     onConnect {|parameter, func|
@@ -67,15 +69,19 @@ MS20PatchBay {
         actions.disconnect[parameter] = func;
     }
 
-    onPatch {|... args|
-        var addr1, addr2, connectFunc, disconnectFunc;
-        #addr1, addr2, connectFunc, disconnectFunc = args;
-
-        actions[\patch][addr1] ?? {
-            actions[\patch][addr1] = ();
+    onPatch {|addr1, addr2, connectFunc, disconnectFunc|
+        actions[\patchConnect][addr1] ?? {
+            actions[\patchConnect][addr1] = ();
         };
+        actions[\patchConnect][addr1][addr2] = connectFunc;
 
-        actions[\patch][addr1][addr2] = connectFunc;
+        // optional
+        if(disconnectFunc.isFunction) {
+            actions[\patchDisconnect][addr1] ?? {
+                actions[\patchDisconnect][addr1] = ();
+            };
+            actions[\patchDisconnect][addr1][addr2] = disconnectFunc;
+        }
     }
 
     parse {|message|
@@ -83,10 +89,10 @@ MS20PatchBay {
         var event, addr1, addr2;
         #event, addr1, addr2 = message;
 
-        from = ctls[addr1];
-        to = ctls[addr2];
+        from = inputs[addr1];
+        to = inputs[addr2];
 
-        message.debug('message');
+        // message.debug('message');
 
         switch (event)
         { 4 } {
@@ -94,17 +100,16 @@ MS20PatchBay {
                 // execute connect callback
                 actions[\connect][from].value;
             } {
-                if(from != to) {
-                    // execute connect callback
-                    "patch from: % to: %\n".postf(from, to);
-                }
+                // execute connect callback
+                actions[\patchConnect][from][to].value;
             }
         }
         { 5 } {
-            // "disconnect".postln;
-            // param.postln;
             if(from == to) {
                 actions[\disconnect][from].value;
+            } {
+                // execute connect callback
+                actions[\patchDisconnect][from][to].value;
             }
         };
     }
