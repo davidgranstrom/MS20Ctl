@@ -131,8 +131,10 @@ MS20PatchBay {
             // just one connection
             actions.single[eventType][from].value;
         } {
-            // patch callback
-            actions.patch[eventType][from][to].value;
+            // see if there is a patch callback
+            actions.patch[eventType][from] !? {
+                actions.patch[eventType][from][to].value;
+            }
         };
     }
 }
