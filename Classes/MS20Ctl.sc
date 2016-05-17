@@ -103,16 +103,19 @@ MS20PatchBay {
     }
 
     onPatch {|addr1, addr2, connectFunc, disconnectFunc|
-        actions.patch.connect[addr1] ?? {
-            actions.patch.connect[addr1] = ();
-        };
-        actions.patch.connect[addr1][addr2] = connectFunc;
+        if(connectFunc.isFunction) {
+            actions.patch.connect[addr1] ?? {
+                actions.patch.connect[addr1] = ();
+            };
 
-        // optional
+            actions.patch.connect[addr1][addr2] = connectFunc;
+        };
+
         if(disconnectFunc.isFunction) {
             actions.patch.disconnect[addr1] ?? {
                 actions.patch.disconnect[addr1] = ();
             };
+
             actions.patch.disconnect[addr1][addr2] = disconnectFunc;
         }
     }
