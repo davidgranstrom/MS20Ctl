@@ -73,12 +73,16 @@ MS20PatchBay {
             29: \signalOut
         );
 
-        // storage for connect/disconnect callbacks
+        // action types
         actions = ();
-        actions[\connect] = ();
-        actions[\disconnect] = ();
-        actions[\patchConnect] = ();
-        actions[\patchDisconnect] = ();
+        actions.patch = ();
+        actions.single = ();
+
+        // storage for connect/disconnect callbacks
+        actions.single.connect = ();
+        actions.single.disconnect = ();
+        actions.patch.connect = ();
+        actions.patch.disconnect = ();
 
         MIDIdef.cc(\io, {|msg|
             packetList = packetList.add(msg);
@@ -91,54 +95,44 @@ MS20PatchBay {
     }
 
     onConnect {|parameter, func|
-        actions.connect[parameter] = func;
+        actions.single.connect[parameter] = func;
     }
 
     onDisconnect {|parameter, func|
-        actions.disconnect[parameter] = func;
+        actions.single.disconnect[parameter] = func;
     }
 
     onPatch {|addr1, addr2, connectFunc, disconnectFunc|
-        actions[\patchConnect][addr1] ?? {
-            actions[\patchConnect][addr1] = ();
+        actions.patch.connect[addr1] ?? {
+            actions.patch.connect[addr1] = ();
         };
-        actions[\patchConnect][addr1][addr2] = connectFunc;
+        actions.patch.connect[addr1][addr2] = connectFunc;
 
         // optional
         if(disconnectFunc.isFunction) {
-            actions[\patchDisconnect][addr1] ?? {
-                actions[\patchDisconnect][addr1] = ();
+            actions.patch.disconnect[addr1] ?? {
+                actions.patch.disconnect[addr1] = ();
             };
-            actions[\patchDisconnect][addr1][addr2] = disconnectFunc;
+            actions.patch.disconnect[addr1][addr2] = disconnectFunc;
         }
     }
 
     parse {|message|
-        var from, to;
+        var from, to, eventType;
         var event, addr1, addr2;
         #event, addr1, addr2 = message;
 
         from = inputs[addr1];
         to = inputs[addr2];
 
-        // message.debug('message');
+        eventType = (event == 4).if(\connect, \disconnect);
 
-        switch (event)
-        { 4 } {
-            if(from == to) { // just one connection
-                actions[\connect][from].value;
-            } {
-                // patch callback
-                actions[\patchConnect][from][to].value;
-            }
-        }
-        { 5 } {
-            if(from == to) { // just one connection
-                actions[\disconnect][from].value;
-            } {
-                // patch callback
-                actions[\patchDisconnect][from][to].value;
-            }
+        if(from == to) {
+            // just one connection
+            actions.single[eventType][from].value;
+        } {
+            // patch callback
+            actions.patch[eventType][from][to].value;
         };
     }
 }
