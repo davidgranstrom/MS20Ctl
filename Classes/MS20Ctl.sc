@@ -63,7 +63,8 @@ MS20PatchBay {
     }
 
     initPatchBay {
-        var packetList = Array.new(3);
+        var packetList = Array.newClear(3);
+        var idx = 0;
 
         // patch bay inputs
         inputs = (
@@ -85,11 +86,12 @@ MS20PatchBay {
         actions.patch.disconnect = ();
 
         MIDIdef.cc(\io, {|msg|
-            packetList = packetList.add(msg);
+            packetList[idx] = msg;
+            idx = idx + 1;
             // collect 3 consecutive cc messages
-            if(packetList[2].notNil) {
+            if(idx == 3) {
                 this.parse(packetList);
-                packetList = Array.new(3);
+                idx = 0;
             }
         }, [ 99, 98, 6 ]); // event, addr1, addr2
     }
