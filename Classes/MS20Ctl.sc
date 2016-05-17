@@ -22,13 +22,11 @@ MS20Ctl : MS20PatchBay {
         ctls = ();
         knobs = ();
 
+        // knob cc nums
         knobs['vcf-highpass'] = 28;
         knobs['vcf-lowpass'] = 74;
 
-        this.assignCtls(knobs);
-    }
-
-    assignCtls {|knobs|
+        // assign responders
         knobs.keysValuesDo {|key, cc|
             var ctl = MS20Knob(key, cc);
             ctls.put(key, ctl);
