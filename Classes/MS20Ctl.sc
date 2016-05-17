@@ -85,7 +85,7 @@ MS20PatchBay {
         actions.patch.connect = ();
         actions.patch.disconnect = ();
 
-        MIDIdef.cc(\io, {|msg|
+        MIDIdef.cc(\ms20_patchbay_io, {|msg|
             packetList[idx] = msg;
             idx = idx + 1;
             // collect 3 consecutive cc messages
