@@ -22,7 +22,22 @@ MS20Ctl : MS20PatchBay {
         ctls = ();
         knobs = ();
 
-        knobs['vcf-highpass'] = 28;
+        knobs['vco1-waveform'] = 77;
+        knobs['vco1-pw_adjust'] = 14;
+        knobs['vco1-scale'] = 15;
+        knobs['vco2-waveform'] = 82;
+        knobs['vco2-pitch'] = 19;
+        knobs['vco2-scale'] = 22;
+        knobs['vco-portamento'] = 5;
+        knobs['vco-master_tune'] = 18;
+        knobs['vco-freq_mod_mg/t.ext'] = 12;
+        knobs['vco-freq_mod_eg1/ext'] = 93;
+        knobs['vco_mixer-vco1_level'] = 20;
+        knobs['vco_mixer-vco2_level'] = 21;
+        knobs['vcf-highpass_cutoff'] = 28;
+        knobs['vcf-highpass_peak'] = 29;
+        knobs['vcf-highpass_cutoff_mod_MG/T.EXT'] = 29;
+
         knobs['vcf-lowpass'] = 74;
 
         this.assignCtls(knobs);
